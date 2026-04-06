@@ -1,9 +1,11 @@
 <script lang="ts">
     import type { Range } from "../types";
+    import { translate, type Language } from "./Language";
 
     // 只读 value，绝不修改
     export let value: Range;
     export let onChange: (range: Range) => void;
+    export let language: Language | undefined = undefined;
 
     // 向外派发新的区间对象（父级整体替换）
     function dispatchUpdate(newRange: Range) {
@@ -29,12 +31,14 @@
 <div class="RangeInput">
     <!-- 最小值 -->
     <div class="item">
-        <label>最小</label>
-        {#if isInfinite(value.min)}
-            <input type="text" value="-∞" disabled class="disabled" />
-        {:else}
-            <input type="number" value={value.min} on:input={(e) => handleMinChange(+e.currentTarget.value)} />
-        {/if}
+        <label>
+            <span>{language ? translate(language, "ui.range.text.min") : "min"}</span>
+            {#if isInfinite(value.min)}
+                <input type="text" value="-∞" disabled class="disabled" />
+            {:else}
+                <input type="number" value={value.min} on:input={(e) => handleMinChange(+e.currentTarget.value)} />
+            {/if}
+        </label>
 
         <label class="chk">
             <input type="checkbox" checked={isInfinite(value.min)} on:change={(e) => handleMinChange(e.currentTarget.checked ? Number.NEGATIVE_INFINITY : 0)} />
@@ -44,12 +48,14 @@
 
     <!-- 最大值 -->
     <div class="item">
-        <label>最大</label>
-        {#if isInfinite(value.max)}
-            <input type="text" value="+∞" disabled class="disabled" />
-        {:else}
-            <input type="number" value={value.max} on:input={(e) => handleMaxChange(+e.currentTarget.value)} />
-        {/if}
+        <label>
+            <span>{language ? translate(language, "ui.range.text.max") : "max"}</span>
+            {#if isInfinite(value.max)}
+                <input type="text" value="+∞" disabled class="disabled" />
+            {:else}
+                <input type="number" value={value.max} on:input={(e) => handleMaxChange(+e.currentTarget.value)} />
+            {/if}
+        </label>
 
         <label class="chk">
             <input
@@ -65,6 +71,10 @@
 <style>
     .RangeInput {
         font-size: 0.8em;
+
+        & input[type="checkbox"] {
+            font-size: 1em;
+        }
 
         & .range {
             display: flex;

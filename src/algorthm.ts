@@ -36,14 +36,7 @@ export function findResolution(
     onProgress?: (progress: SearchProgress) => void,
     shouldStop?: () => boolean,
 ): Resolution | null {
-
-    // 先将库存转为映射，方便查询，没有小于0的值
-    const inventoryMap: Record<string, number> = {};
-    for (const { id, amount } of inventory) {
-        if (amount > 0) {
-            inventoryMap[id] = (inventoryMap[id] ?? 0) + amount;
-        }
-    }
+    
 
     // 将需求也转为映射，方便查询
     const requestMap: MappedRequests = {
@@ -57,6 +50,20 @@ export function findResolution(
     for (const r of requests) {
         requestMap[r.id] = { min: r.range.min, max: r.range.max };
     }
+
+    function isUsefulItem(id: string): boolean {
+        // TODO：检测是否都实现需求有影响
+        return true;
+    }
+
+    // 先将库存转为映射，方便查询，没有小于0的值
+    const inventoryMap: Record<string, number> = {};
+    for (const { id, amount } of inventory) {
+        if (amount > 0 && isUsefulItem(id)) {
+            inventoryMap[id] = (inventoryMap[id] ?? 0) + amount;
+        }
+    }
+
 
     // 状态（任务）队列，实现广度优先
     const queue: SearchState[] = [

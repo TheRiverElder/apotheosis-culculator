@@ -341,11 +341,11 @@ input[type="text"] {
 }
 
 #app {
-  --attribute-color-level: green;
-  --attribute-color-quanta: red;
-  --attribute-color-rectification: yellow;
-  --attribute-color-arcana: purple;
-  --attribute-color-clues: cyan;
+  --attribute-color-level: rgb(0, 255, 0);
+  --attribute-color-quanta: rgb(255, 0, 0);
+  --attribute-color-rectification: rgb(255, 255, 0);
+  --attribute-color-arcana: rgb(255, 0, 255);
+  --attribute-color-clues: rgb(0, 255, 255);
 
 
 

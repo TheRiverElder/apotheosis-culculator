@@ -194,7 +194,9 @@
 
     function deleteItemInfo(index: number) {
         itemInfoList.splice(index, 1);
+        inventory.splice(index, 1);
         itemInfoList = itemInfoList;
+        inventory = inventory;
     }
 
     let editingItemInfo: ItemInfo | null = null;
@@ -256,7 +258,7 @@
 
     <!-- 现有材料清单，现在有的材料 -->
     <div class="inventory">
-        <h2 class="title">现有材料</h2>
+        <h2 class="title">{translate(language, "ui.title.inventory")}</h2>
         <div class="content list">
             {#each inventory as itemStack, index}
                 <div class="flex-row">
@@ -264,6 +266,7 @@
                     <span class="spacer"></span>
                     <div class="tools flex-column">
                         <label>
+                            <span>{translate(language, "ui.text.stock")}</span>
                             <input type="number" bind:value={inventory[index].amount} />
                         </label>
                         <button class="small" on:click={() => editItemInfo(index)}>编辑</button>
@@ -279,7 +282,7 @@
 
     <!-- 需求清单，每种条件的需求 -->
     <div class="requests">
-        <h2 class="title">需求</h2>
+        <h2 class="title">{translate(language, "ui.title.requests")}</h2>
         <div class="content">
             <div class="list">
                 {#each requests as request, index}
@@ -287,10 +290,10 @@
                         <span>{translate(language, request.id)} </span>
                         <span class="spacer"></span>
                         <label>
-                            <span>初始值</span>
+                            <span>{translate(language, "ui.text.initial")}</span>
                             <input type="number" bind:value={request.initial} />
                         </label>
-                        <RangeInput value={request.range} onChange={(v) => (request.range = v)} />
+                        <RangeInput {language} value={request.range} onChange={(v) => (request.range = v)} />
                     </div>
                 {/each}
             </div>
@@ -309,13 +312,13 @@
 
     <!-- 结果材料清单，需要使用到的方块 -->
     <div class="result">
-        <h2 class="title">计算结果</h2>
+        <h2 class="title">{translate(language, "ui.title.result")}</h2>
         <div class="content list">
             {#each result as itemStack}
                 <div class="flex-row">
                     <ItemLabel {language} {itemInfoMap} {itemStack} />
                     <span class="spacer"></span>
-                    <span>{itemStack.amount}</span>
+                    <span class="amount">× {itemStack.amount}</span>
                 </div>
             {/each}
         </div>
@@ -378,6 +381,7 @@
 
                 & input {
                     font-size: 1em;
+                    width: 3em;
                 }
             }
         }
@@ -399,6 +403,16 @@
                 &:not(:first-child) {
                     margin-top: 0.5em;
                 }
+            }
+        }
+
+        & > .result > .content {
+            display: flex;
+            flex-direction: column;
+            gap: 1em;
+
+            & .amount {
+                font-size: 1.5em;
             }
         }
 
