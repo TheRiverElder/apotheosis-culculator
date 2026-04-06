@@ -31,36 +31,57 @@ let itemInfoMap: Record<string, ItemInfo> = {};
 // 使用广度优先算法+剪枝
 // 此时传入的inventory已需要时已经筛选过数量大于0的
 export function findResolution(
-    inventory: ItemStack[],
-    requests: ConditionRequest[],
+    inputInventory: ItemStack[],
+    inputRequests: ConditionRequest[],
     onProgress?: (progress: SearchProgress) => void,
     shouldStop?: () => boolean,
 ): Resolution | null {
     
 
     // 将需求也转为映射，方便查询
-    const requestMap: MappedRequests = {
+    const requests: MappedRequests = {
         level: RANGE_ANY,
-        maxLevel: RANGE_ANY,
+        maxLevel: RANGE_ANY, // 这个字段其实没用
         quanta: RANGE_ANY,
         rectification: RANGE_ANY,
         arcana: RANGE_ANY,
         clues: RANGE_ANY,
     };
-    for (const r of requests) {
-        requestMap[r.id] = { min: r.range.min, max: r.range.max };
+    for (const r of inputRequests) {
+        requests[r.id] = { min: r.range.min, max: r.range.max };
     }
 
     function isUsefulItem(id: string): boolean {
-        // TODO：检测是否都实现需求有影响
-        return true;
+        const info = itemInfoMap[id];
+        if (!info) return false;
+        
+        function isNoLimit(range: Range) {
+            return range === RANGE_ANY || (!Number.isFinite(range.min) && !Number.isFinite(range.max));
+        }
+
+        // TODO：检测是否对实现需求有影响
+        let useful: boolean = false;
+        if (info.level !== 0 && !isNoLimit(requests.level)) useful ||= true;
+        if (info.maxLevel >= requests.level.min) useful ||= true;
+        if (info.quanta !== 0 && !isNoLimit(requests.quanta)) useful ||= true;
+        if (info.rectification !== 0 && !isNoLimit(requests.rectification)) useful ||= true;
+        if (info.arcana !== 0 && !isNoLimit(requests.arcana)) useful ||= true;
+        if (info.clues !== 0 && !isNoLimit(requests.clues)) useful ||= true;
+
+        return useful;
     }
 
     // 先将库存转为映射，方便查询，没有小于0的值
     const inventoryMap: Record<string, number> = {};
-    for (const { id, amount } of inventory) {
-        if (amount > 0 && isUsefulItem(id)) {
-            inventoryMap[id] = (inventoryMap[id] ?? 0) + amount;
+    const inventory: ItemStack[] = [];
+    for (const { id, amount } of inputInventory) {
+        if (amount > 0) {
+            const useful = isUsefulItem(id);
+            console.log(id, 'useful', useful)
+            if (useful) {
+                inventoryMap[id] = (inventoryMap[id] ?? 0) + amount;
+                inventory.push({ id, amount });
+            } 
         }
     }
 
@@ -69,12 +90,12 @@ export function findResolution(
     const queue: SearchState[] = [
         {
             attributes: {
-                level: requests.find(it => it.id === 'level')?.initial ?? 0,
-                maxLevel: requests.find(it => it.id === 'maxLevel')?.initial ?? 0,
-                quanta: requests.find(it => it.id === 'quanta')?.initial ?? 0,
-                rectification: requests.find(it => it.id === 'rectification')?.initial ?? 0,
-                arcana: requests.find(it => it.id === 'arcana')?.initial ?? 0,
-                clues: requests.find(it => it.id === 'clues')?.initial ?? 0,
+                level: inputRequests.find(it => it.id === 'level')?.initial ?? 0,
+                maxLevel: inputRequests.find(it => it.id === 'maxLevel')?.initial ?? 0,
+                quanta: inputRequests.find(it => it.id === 'quanta')?.initial ?? 0,
+                rectification: inputRequests.find(it => it.id === 'rectification')?.initial ?? 0,
+                arcana: inputRequests.find(it => it.id === 'arcana')?.initial ?? 0,
+                clues: inputRequests.find(it => it.id === 'clues')?.initial ?? 0,
             },
             used: {},
             count: 0,
@@ -104,7 +125,7 @@ export function findResolution(
 
 
         const usedItemStackList = Object.entries(currentState.used).map(([id, amount]) => ({ id, amount }));
-        const satisfyRequests = matchesCondition(requestMap, currentState.attributes);
+        const satisfyRequests = matchesCondition(requests, currentState.attributes);
         const satisfyInventory = usedItemStackList.every(({ id, amount: usedAmout }) => usedAmout <= (inventoryMap[id] ?? 0));
         // console.log("satisfyRequests", satisfyRequests);
         // console.log("satisfyInventory", satisfyInventory);
