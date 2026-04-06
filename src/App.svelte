@@ -413,6 +413,7 @@
 
             & .amount {
                 font-size: 1.5em;
+                margin-top: 0.5em;
             }
         }
 
